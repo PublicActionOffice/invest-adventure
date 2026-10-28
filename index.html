@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>インベスト・アドベンチャー｜10年間の資産形成ゲーム</title>
+<meta name="description" content="遊びながら投資の基本（分散・複利・リスク・詐欺の見分け方）が学べる教育用ブラウザゲーム。100万円から始めて10年間の資産形成を体験しよう。">
+<style>
+:root{
+--jp:#e74c3c; --us:#2471a3; --bond:#27ae60; --gold:#b7950b; --crypto:#8e44ad; --cash:#7f8c8d;
+--ink:#1c2833; --bg:#f4f6f9; --card:#ffffff; --accent:#f39c12;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,#1a5276,#2471a3 55%,#17a589);color:#fff;padding:22px 16px 18px;text-align:center}
+header h1{margin:0 0 4px;font-size:1.6rem;letter-spacing:.02em}
+header p{margin:0;opacity:.92;font-size:.92rem}
+.wrap{max-width:780px;margin:0 auto;padding:16px}
+.hud{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.hud.box{flex:1;min-width:150px;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.hud.label{font-size:.78rem;color:#5d6d7e}
+.hud.value{font-size:1.35rem;font-weight:700}
+.progress{height:10px;background:#d5dbdb;border-radius:6px;overflow:hidden;margin-top:6px}
+.progress > div{height:100%;background:var(--accent);width:0%;transition:width.5s}
+.card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 1px 5px rgba(0,0,0,.08);margin-bottom:16px}
+.card h2{margin:0 0 10px;font-size:1.12rem}
+.news{border-left:6px solid var(--accent);background:#fef9e7}
+.news.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;padding:1px 10px;font-size:.75rem;font-weight:700;margin-bottom:6px}
+.lesson{border-left:6px solid #17a589;background:#eafaf1}
+.lesson.tag{display:inline-block;background:#17a589;color:#fff;border-radius:20px;padding:1px 10px;font-size:.75rem;font-weight:700;margin-bottom:6px}
+.asset-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed #d5dbdb}
+.asset-row:last-child{border-bottom:none}
+.dot{width:14px;height:14px;border-radius:50%;flex:none}
+.asset-info{flex:1;min-width:0}
+.asset-name{font-weight:700}
+.asset-desc{font-size:.78rem;color:#5d6d7e}
+.asset-amt{font-size:.85rem;color:#34495e;text-align:right;min-width:96px}
+.alloc-ctl{display:flex;align-items:center;gap:6px}
+.alloc-ctl button{width:34px;height:34px;border-radius:50%;border:2px solid #aeb6bf;background:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;line-height:1}
+.alloc-ctl button:active{transform:scale(.94)}
+.alloc-pct{min-width:52px;text-align:center;font-weight:700;font-size:1.05rem}
+.stackbar{display:flex;height:20px;border-radius:10px;overflow:hidden;background:#eaeded;margin:10px 0 4px}
+.stackbar > div{height:100%;transition:width.3s}
+.total-line{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.total-ok{color:#1e8449}.total-ng{color:#c0392b}
+.btn{display:inline-block;border:none;border-radius:10px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;background:#2471a3;color:#fff}
+.btn:disabled{background:#aeb6bf;cursor:not-allowed}
+.btn.sub{background:#eaf2f8;color:#1a5276}
+.btn.warn{background:#c0392b}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.result-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #d5dbdb;font-size:.95rem}
+.result-row:last-child{border-bottom:none}
+.up{color:#1e8449;font-weight:700}.down{color:#c0392b;font-weight:700}
+.quiz-opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 14px;border:2px solid #aeb6bf;border-radius:10px;background:#fff;font-size:.98rem;cursor:pointer}
+.quiz-opt:hover{border-color:#2471a3}
+.quiz-opt.correct{border-color:#1e8449;background:#eafaf1}
+.quiz-opt.wrong{border-color:#c0392b;background:#fdedec}
+.hidden{display:none}
+.rank{font-size:1.7rem;font-weight:800;text-align:center;color:#1a5276}
+.big-total{font-size:2rem;font-weight:800;text-align:center}
+.log{font-size:.88rem;color:#34495e;max-height:220px;overflow:auto}
+.log div{padding:5px 0;border-bottom:1px dotted #d5dbdb}
+footer{color:#5d6d7e;font-size:.8rem;text-align:center;padding:8px 16px 30px}
+.scam{border:2px solid #c0392b;background:#fdedec}
+@media (max-width:560px){.asset-amt{display:none} header h1{font-size:1.3rem}}
+</style>
+</head>
+<body>
+<header>
+<h1>🗺️ インベスト・アドベンチャー</h1>
+<p>100万円から始める、10年間の資産形成ゲーム。遊びながら「分散・複利・リスク」を体で覚えよう。</p>
+</header>
+
+<div class="wrap">
+<!-- HUD -->
+<div class="hud">
+<div class="box">
+<div class="label">総資産（仮想マネー）</div>
+<div class="value" id="hud-total">¥1,000,000</div>
+<div class="label" id="hud-diff">スタート地点</div>
+</div>
+<div class="box">
+<div class="label">進行度</div>
+<div class="value" id="hud-year">1年目 / 10年</div>
+<div class="progress"><div id="hud-progress"></div></div>
+</div>
+<div class="box">
+<div class="label">知識ボーナス獲得</div>
+<div class="value" id="hud-quiz">¥0</div>
+<div class="label">クイズ正解で賞金ゲット</div>
+</div>
+</div>
+
+<!-- スタート画面 -->
+<div class="card" id="screen-start">
+<h2>🎯 ルール（30秒で読める）</h2>
+<p>毎年、ニュースが1つ届きます。ヒントを読んで、あなたの資産を <b>6つの置き場所</b> に振り分けてください（合計100%）。その年の市場が動いて、資産が増えたり減ったりします。これを10年くり返します。</p>
+<p>📌 毎年、積立として <b>12万円</b> が自動で現金に入ります（コツコツ積立の体験）。<br>
+📌 途中で投資クイズが出題。正解すると知識ボーナス！<br>
+📌 怪しい「必ず儲かる話」が来ることも…。どうするかは、あなた次第。</p>
+<p style="color:#5d6d7e;font-size:.9rem">※これは教育用ゲームです。出てくる値動きは学習用に作られたランダムなもので、現実の市場や特定の商品を勧めるものではありません。</p>
+<div class="btnrow"><button class="btn" id="btn-start">▶ ゲームスタート</button></div>
+</div>
+
+<!-- 詐欺イベント -->
+<div class="card scam hidden" id="screen-scam">
+<h2>🚨 突然の勧誘！</h2>
+<p>SNSで知り合った人からDMが届きました。</p>
+<p style="font-size:1.05rem"><b>「月利10%・元本保証の特別な投資があります。今だけ、内緒ですよ」</b></p>
+<p>どうしますか？</p>
+<div class="btnrow">
+<button class="btn warn" id="btn-scam-yes">💸 話に乗る（資産の15%を預ける）</button>
+<button class="btn" id="btn-scam-no">🛡️ 断る</button>
+</div>
+<p id="scam-result" style="font-weight:700"></p>
+<div class="btnrow hidden" id="scam-next-row"><button class="btn" id="btn-scam-next">▶ その年の運用へ進む</button></div>
+</div>
+
+<!-- 年次メイン画面 -->
+<div class="card hidden" id="screen-year">
+<div class="card news" style="box-shadow:none;margin-bottom:12px">
+<span class="tag">📰 今年のニュース</span>
+<div id="news-text" style="font-size:1.02rem"></div>
+</div>
+<h2>💼 資産の置き場所を決めよう（合計100%）</h2>
+<div id="alloc-list"></div>
+<div class="stackbar" id="stackbar"></div>
+<div class="total-line"><span>合計</span><span id="alloc-total">100%</span></div>
+<div class="btnrow">
+<button class="btn sub" id="btn-equal">均等にする</button>
+<button class="btn sub" id="btn-safe">堅実な例</button>
+<button class="btn sub" id="btn-aggro">積極的な例</button>
+</div>
+<div class="btnrow">
+<button class="btn" id="btn-invest" disabled>📈 この配分で1年進める</button>
+</div>
+</div>
+
+<!-- 年次結果 -->
+<div class="card hidden" id="screen-result">
+<h2 id="result-title">📊 1年目の結果</h2>
+<div id="result-rows"></div>
+<p id="result-total" style="font-size:1.08rem;font-weight:700"></p>
+<div class="card lesson" style="box-shadow:none">
+<span class="tag">🎓 学びポイント</span>
+<div id="lesson-text"></div>
+</div>
+<div class="btnrow"><button class="btn" id="btn-next-year">▶ 次の年へ</button></div>
+</div>
+
+<!-- クイズ -->
+<div class="card hidden" id="screen-quiz">
+<h2>🧠 投資クイズ（正解で知識ボーナス +5万円）</h2>
+<p id="quiz-q" style="font-size:1.05rem;font-weight:700"></p>
+<div id="quiz-opts"></div>
+<p id="quiz-explain" class="hidden" style="background:#eaf2f8;border-radius:10px;padding:12px"></p>
+<div class="btnrow hidden" id="quiz-next-row"><button class="btn" id="btn-quiz-next">▶ 進む</button></div>
+</div>
+
+<!-- 最終結果 -->
+<div class="card hidden" id="screen-final">
+<h2>🏁 10年間、おつかれさまでした！</h2>
+<div class="rank" id="final-rank"></div>
+<div class="big-total" id="final-total"></div>
+<p id="final-detail" style="text-align:center"></p>
+<h3>📝 あなたの投資スタイル診断</h3>
+<ul id="final-feedback"></ul>
+<h3>🎓 このゲームで学んだこと</h3>
+<ul id="final-lessons"></ul>
+<div class="btnrow"><button class="btn" id="btn-restart">🔄 もう一度遊ぶ</button></div>
+</div>
+
+<!-- ログ -->
+<div class="card">
+<h2>📜 冒険の記録</h2>
+<div class="log" id="log"><div>まだ何も起きていません。ゲームを始めよう！</div></div>
+</div>
+</div>
+
+<footer>
+インベスト・アドベンチャー ― 教育用ゲームです。登場する値動きは学習用に生成したもので、現実の収益を保証したり、特定の金融商品を勧めたりするものではありません。実際の投資は自己責任で、余裕資金の範囲で行いましょう。
+</footer>
+
+<script>
+'use strict';
+/* ===== データ定義 ===== */
+var ASSETS = [
+{ id:'jp', name:'日本株ファンド', icon:'🗾', color:'var(--jp)', desc:'日本の会社全体に分散投資', mean:6, sd:17},
+{ id:'us', name:'米国株ファンド', icon:'🗽', color:'var(--us)', desc:'米国の会社全体に分散投資', mean:8, sd:16},
+{ id:'bond', name:'世界債券ファンド', icon:'🛡️', color:'var(--bond)', desc:'各国の債券。値動きは小さめ', mean:2, sd:5},
+{ id:'gold', name:'金（ゴールド）', icon:'🥇', color:'var(--gold)', desc:'有事に強いと言われる実物資産', mean:4, sd:13},
+{ id:'crypto',name:'暗号資産', icon:'🪙', color:'var(--crypto)',desc:'夢は大きいが値動きは激しい', mean:14, sd:55},
+{ id:'cash', name:'現金', icon:'💴', color:'var(--cash)', desc:'減らないが増えもしない', mean:0, sd:0}
+];
+
+var EVENTS = [
+{ name:'好景気ブーム', hint:'「景気は絶好調！」という声があちこちから聞こえます。企業の業績も上向きのようです。',
+mods:{jp:12,us:12,bond:-2,gold:-3,crypto:25,cash:0},
+reveal:'景気が大きく拡大した1年でした。株価も暗号資産も大きく上昇。',
+lesson:'好景気の年は「もっと買えばよかった」と感じがち。でも、景気の波は必ず反転します。調子のいい時ほど配分ルールを守るのが長期投資のコツです。'},
+{ name:'金融危機', hint:'海外の大きな銀行の経営不安が報じられ、市場にざわつきが広がっています…。',
+mods:{jp:-26,us:-24,bond:4,gold:10,crypto:-55,cash:0},
+reveal:'世界的な金融危機が発生。株価と暗号資産が暴落する一方、安全資産とされる債券と金に資金が逃げました。',
+lesson:'暴落は必ずいつか来ます。大切なのは「当てる」ことではなく「退場しない」こと。債券や金など、株と違う動きをする資産を持っていると、全体のダメージが小さくなります（分散の効果）。'},
+{ name:'インフレ加速', hint:'スーパーの商品が次々と値上がりしています。「物価が上がっている」というニュースが増えてきました。',
+mods:{jp:2,us:3,bond:-6,gold:12,crypto:5,cash:-4},
+reveal:'物価が大きく上昇。現金の「買える力」は目減りし、金などの実物資産が値上がりしました。',
+lesson:'現金は額面こそ減りませんが、インフレ（物価の上昇）が起きると実質的な価値は下がります。「減らない＝安全」とは限らないのがお金の難しさです。'},
+{ name:'中央銀行の利上げ', hint:'中央銀行が「金利を引き上げる」と発表しました。預金の金利も少し上がるようです。',
+mods:{jp:-8,us:-9,bond:-8,gold:-4,crypto:-15,cash:1},
+reveal:'金利の上昇で、株・債券・暗号資産がそろって下落。預金金利だけが少し良くなりました。',
+lesson:'金利と債券の価格は逆向きに動きます（金利が上がると債券価格は下がる）。ニュースで「利上げ」と聞いたら、債券や株価にどう影響するか考えるクセをつけましょう。'},
+{ name:'金融緩和・利下げ', hint:'中央銀行が金利を引き下げ、景気を支える姿勢を打ち出しました。',
+mods:{jp:10,us:11,bond:6,gold:3,crypto:18,cash:0},
+reveal:'金利が下がり、お金が市場に流れ込んで株・債券・暗号資産が上昇しました。',
+lesson:'金利が低い環境では、預金だけでは資産が増えにくくなります。だからこそ多くの人が「投資でお金に働いてもらう」ことを考え始めるのです。'},
+{ name:'円安の進行', hint:'「1ドル＝かなり円安」のニュース。海外旅行が高くなったと話題です。',
+mods:{jp:4,us:12,bond:5,gold:6,crypto:6,cash:0},
+reveal:'円安が進み、外貨建て資産（米国株・世界債券・金）の円換算の価値が押し上げられました。',
+lesson:'海外資産の値段は「その資産自体の動き × 為替」で決まります。株価が変わらなくても、円安・円高だけで円での評価額は動くのです。'},
+{ name:'円高の進行', hint:'円の価値が急に高くなっています。輸入品が安くなる一方、輸出企業の心配の声も。',
+mods:{jp:-3,us:-11,bond:-5,gold:-5,crypto:-4,cash:0},
+reveal:'円高で外貨建て資産の円換算額が目減りしました。',
+lesson:'円高は海外資産にとって逆風。でも逆に言えば、円高の時期は海外資産を「安く買える」時期でもあります。為替は長期では平均に戻りやすい性質があります。'},
+{ name:'テクノロジーバブル', hint:'新しいテクノロジーが連日ニュースに！関連株や暗号資産に注目が集まっています。',
+mods:{jp:6,us:18,bond:0,gold:-2,crypto:30,cash:0},
+reveal:'テクノロジー人気が過熱し、米国株と暗号資産が急騰しました。',
+lesson:'「みんなが熱狂している時」こそ要注意。ブームの時に高値で飛びつくと、その後の反動で大きく損をしやすいものです（高値掴み）。割合を決めて守ることが自分を守ります。'},
+{ name:'地政学ショック', hint:'世界のどこかで緊張が高まり、ニュースがその話題で持ちきりです。',
+mods:{jp:-12,us:-10,bond:3,gold:14,crypto:-20,cash:0},
+reveal:'不安の高まりで株価が下落し、安全資産とされる金に資金が流れました。',
+lesson:'金は「有事の金」と呼ばれ、世界が不安な時に買われやすい資産です。株とは違う動きをする資産を持つ意味が、こういう年に分かります。'},
+{ name:'平穏な年', hint:'特に大きなニュースのない、穏やかな1年になりそうです。',
+mods:{jp:1,us:1,bond:0,gold:0,crypto:0,cash:0},
+reveal:'大きな出来事のない1年。各資産は、それぞれの平均的な力で少しずつ動きました。',
+lesson:'何もない年こそ、実は資産形成の本番です。コツコツ積み立てを続けた人が、長い目で見て差をつけます。退屈に耐えるのも投資の実力のうちです。'},
+{ name:'暗号資産ブーム', hint:'SNSで暗号資産の話題が大沸騰。「今買わないと乗り遅れる！」という投稿があふれています。',
+mods:{jp:0,us:2,bond:0,gold:-2,crypto:45,cash:0},
+reveal:'暗号資産が爆発的に上昇しました。他の資産はほぼ平常運転です。',
+lesson:'暗号資産は短期間で何倍にもなることがある一方、半分以下になることも珍しくありません。「なくなっても生活に困らない範囲の割合」で付き合うのが鉄則です。'},
+{ name:'有名企業の不正発覚', hint:'誰もが知る有名企業に不正会計の疑いが報じられました。',
+mods:{jp:-4,us:-1,bond:0,gold:1,crypto:0,cash:0},
+reveal:'不正を起こした会社の株は暴落しましたが、ファンド全体への影響は限定的でした。',
+lesson:'1社の株だけを持っていたら大惨事でも、たくさんの会社に分散するファンドなら傷は浅く済みます。「卵を1つのカゴに盛るな」という格言の意味です。'}
+];
+
+var QUIZZES = [
+{ q:'100万円を年利7%で運用すると、10年でおよそいくらになる？（複利の力）',
+opts:['140万円くらい','170万円くらい','約197万円（ほぼ2倍）'], ans:2,
+exp:'正解は約197万円。利息が利息を生む「複利」では、時間が最大の武器になります。早く始めて長く続けることが大切な理由です。'},
+{ q:'投資の格言「卵を1つのカゴに盛るな」の意味は？',
+opts:['卵は冷蔵庫に入れるべき','1つの資産に集中せず分散せよ','卵料理は一度に作れ'], ans:1,
+exp:'1つのカゴを落とす（=1社が倒産する）と全部割れてしまう、という分散投資の大切さを表す格言です。'},
+{ q:'NISA（少額投資非課税制度）の大きな特徴は？',
+opts:['必ず儲かる制度','投資で得た利益が非課税になる','国が元本を保証する'], ans:1,
+exp:'NISAでは、株式や投資信託の売却益・配当が非課税になります。ただし元本保証はなく、損をすることもあります。'},
+{ q:'次のうち「投資詐欺の危険信号」として一番怪しいのは？',
+opts:['「元本保証で月利10%」と誘われる','証券会社のサイトで手数料を確認する','決算資料を読む'], ans:0,
+exp:'「元本保証＋高利回り」は詐欺の典型パターン。本当の投資に“必ず儲かる”は存在しません。知らない相手からの勧誘は特に要注意です。'},
+{ q:'インフレ（物価上昇）が続くと、タンス預金の現金はどうなる？',
+opts:['実質的な価値が下がる','実質的な価値が上がる','まったく影響しない'], ans:0,
+exp:'物価が上がると、同じ1万円で買えるものが減ります。現金は額面が減らなくても「買える力」は目減りしていくのです。'},
+{ q:'投資信託の「信託報酬」が年0.1%と年1%のファンド。30年運用すると…？',
+opts:['ほとんど差はつかない','手数料の差が複利で効いて大きな差になる','高いほうが必ず儲かる'], ans:1,
+exp:'わずかな手数料の差でも、毎年引かれ続けると複利の逆回転で大きな差になります。コストはリターンにおける「確実なマイナス」です。'},
+{ q:'「ドルコスト平均法」とはどんな方法？',
+opts:['ドルを安い時だけ買う方法','毎回決まった金額を定期的に買い続ける方法','専門家に全部任せる方法'], ans:1,
+exp:'価格が高い時は少なく、安い時は多く買えるため、平均の買値がならされる効果があります。積立投資の基本的な考え方です。'},
+{ q:'投資でいう「リスク」の正しい意味は？',
+opts:['必ず損をすること','値動きのブレの大きさ','借金をすること'], ans:1,
+exp:'リスクとは「危険」ではなく「不確実性（ブレの大きさ）」のこと。ブレが大きい資産は、大きく増える可能性と大きく減る可能性の両方を持っています。'}
+];
+
+/* ===== 状態 ===== */
+var TOTAL_YEARS = 10, TITSUMI = 120000, QUIZ_BONUS = 50000;
+var state;
+function newState(){
+return {
+year: 1, started: false, scamDone: false,
+holdings: { jp:0, us:0, bond:0, gold:0, crypto:0, cash:1000000},
+alloc: { jp:20, us:20, bond:20, gold:10, crypto:10, cash:20},
+event: null, quizEarned: 0, quizCorrect: 0, quizAsked: 0,
+allocHistory: [], lessonsSeen: [], scamResult: null,
+usedQuizzes: [], pendingQuizAfter: false
+};
+}
+function totalAssets(){ return ASSETS.reduce(function(s,a){ return s + state.holdings[a.id];}, 0);}
+function yen(n){ return '¥' + Math.round(n).toLocaleString('ja-JP');}
+function $(id){ return document.getElementById(id);}
+function show(id){ ['screen-start','screen-scam','screen-year','screen-result','screen-quiz','screen-final'].forEach(function(x){ $(x).classList.toggle('hidden', x!==id);});}
+function log(msg){ var el=$('log'); if(state &&!state.started){ el.innerHTML='';} var d=document.createElement('div'); d.textContent=msg; el.prepend(d);}
+function randn(){ return (Math.random()+Math.random()+Math.random()-1.5)/1.5;} // -1..1 の疑似正規分布
+
+function updateHUD(){
+var t = totalAssets();
+$('hud-total').textContent = yen(t);
+var diff = t - 1000000;
+$('hud-diff').textContent = state.year>1 || t!==1000000
+? ('元手100万円との差：' + (diff>=0?'+':'') + yen(diff).replace('¥','¥'))
+: 'スタート地点';
+$('hud-year').textContent = Math.min(state.year, TOTAL_YEARS) + '年目 / ' + TOTAL_YEARS + '年';
+$('hud-progress').style.width = ((state.year-1)/TOTAL_YEARS*100) + '%';
+$('hud-quiz').textContent = yen(state.quizEarned);
+}
+
+/* ===== 画面遷移 ===== */
+function startGame(){
+state = newState(); state.started = true;
+$('log').innerHTML='';
+log('🗺️ 冒険スタート！ 元手100万円で10年間の資産形成に挑戦。');
+startYear();
+}
+
+function startYear(){
+updateHUD();
+if(state.year === 5 &&!state.scamDone){ show('screen-scam'); return;}
+setupYear();
+}
+
+function setupYear(){
+state.event = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+$('news-text').textContent = '' + state.event.hint;
+renderAlloc();
+show('screen-year');
+window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderAlloc(){
+var list = $('alloc-list'); list.innerHTML='';
+ASSETS.forEach(function(a){
+var row = document.createElement('div'); row.className='asset-row';
+row.innerHTML =
+'<div class="dot" style="background:' + a.color + '"></div>' +
+'<div class="asset-info"><div class="asset-name">' + a.icon + ' ' + a.name + '</div>' +
+'<div class="asset-desc">' + a.desc + '</div></div>' +
+'<div class="asset-amt">現在 ' + yen(state.holdings[a.id]) + '</div>' +
+'<div class="alloc-ctl"><button data-id="' + a.id + '" data-d="-10">−</button>' +
+'<span class="alloc-pct" id="pct-' + a.id + '">' + state.alloc[a.id] + '%</span>' +
+'<button data-id="' + a.id + '" data-d="10">＋</button></div>';
+list.appendChild(row);
+});
+list.querySelectorAll('button').forEach(function(b){
+b.addEventListener('click', function(){
+var id = b.getAttribute('data-id'), d = parseInt(b.getAttribute('data-d'),10);
+var nv = state.alloc[id] + d;
+if(nv < 0 || nv > 100) return;
+state.alloc[id] = nv; refreshAlloc();
+});
+});
+refreshAlloc();
+}
+
+function allocTotal(){ return ASSETS.reduce(function(s,a){ return s + state.alloc[a.id];}, 0);}
+
+function refreshAlloc(){
+ASSETS.forEach(function(a){ $('pct-' + a.id).textContent = state.alloc[a.id] + '%';});
+var bar = $('stackbar'); bar.innerHTML='';
+ASSETS.forEach(function(a){
+var d = document.createElement('div');
+d.style.width = state.alloc[a.id] + '%'; d.style.background = a.color; d.title = a.name;
+bar.appendChild(d);
+});
+var t = allocTotal();
+var el = $('alloc-total');
+el.textContent = t + '%' + (t===100? ' ✅': '（あと ' + Math.abs(100-t) + '% ' + (t<100?'足りません':'オーバー') + '）');
+el.className = t===100? 'total-ok': 'total-ng';
+$('btn-invest').disabled = (t!== 100);
+}
+
+function setAlloc(map){ ASSETS.forEach(function(a){ state.alloc[a.id] = map[a.id] || 0;}); refreshAlloc();}
+
+function invest(){
+var total = totalAssets();
+state.allocHistory.push(Object.assign({}, state.alloc));
+var rowsHtml = '', newHoldings = {}, summary = [];
+ASSETS.forEach(function(a){
+var before = total * state.alloc[a.id] / 100;
+var r = a.mean + randn()*a.sd + (state.event.mods[a.id] || 0);
+if(a.id==='cash') r = state.event.mods.cash || 0;
+var after = before * (1 + r/100);
+newHoldings[a.id] = after;
+var cls = r>0? 'up': (r<0? 'down': '');
+var sign = r>0? '▲ +': (r<0? '▼ ': '± ');
+rowsHtml += '<div class="result-row"><span>' + a.icon + ' ' + a.name + '（配分' + state.alloc[a.id] + '%）</span>' +
+'<span class="' + cls + '">' + sign + r.toFixed(1) + '%　' + yen(before) + ' → ' + yen(after) + '</span></div>';
+summary.push(a.name + ' ' + (r>=0?'+':'') + r.toFixed(1) + '%');
+});
+state.holdings = newHoldings;
+var newTotal = totalAssets();
+$('result-title').textContent = '📊 ' + state.year + '年目の結果 ― ' + state.event.name;
+$('result-rows').innerHTML = '<p style="margin-top:0">📰 ' + state.event.reveal + '</p>' + rowsHtml;
+$('result-total').textContent = '総資産：' + yen(total) + ' → ' + yen(newTotal) + '（' + (newTotal>=total?'+':'') + yen(newTotal-total).replace('¥','¥') + '）';
+$('lesson-text').textContent = state.event.lesson;
+if(state.lessonsSeen.indexOf(state.event.lesson) === -1) state.lessonsSeen.push(state.event.lesson);
+log('📅 ' + state.year + '年目［' + state.event.name + '］' + summary.join(' / ') + ' → 総資産 ' + yen(newTotal));
+show('screen-result'); updateHUD();
+window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function nextYear(){
+state.year++;
+if(state.year > TOTAL_YEARS){ finalResult(); return;}
+state.holdings.cash += TITSUMI;
+log('💰 積立 +' + yen(TITSUMI) + ' が現金に入りました（コツコツ積立）。');
+if(state.year === 4 || state.year === 7 || state.year === 10){ askQuiz(); return;}
+startYear();
+}
+
+/* ===== クイズ ===== */
+function askQuiz(){
+var pool = QUIZZES.map(function(_,i){return i;}).filter(function(i){ return state.usedQuizzes.indexOf(i)===-1;});
+var idx = pool[Math.floor(Math.random()*pool.length)];
+state.usedQuizzes.push(idx);
+var q = QUIZZES[idx]; state.quizAsked++;
+$('quiz-q').textContent = q.q;
+$('quiz-explain').classList.add('hidden');
+$('quiz-next-row').classList.add('hidden');
+var box = $('quiz-opts'); box.innerHTML='';
+q.opts.forEach(function(opt, i){
+var b = document.createElement('button'); b.className='quiz-opt'; b.textContent = opt;
+b.addEventListener('click', function(){
+box.querySelectorAll('button').forEach(function(x){ x.disabled = true;});
+var ex = $('quiz-explain');
+if(i === q.ans){
+b.classList.add('correct'); state.quizCorrect++; state.quizEarned += QUIZ_BONUS;
+state.holdings.cash += QUIZ_BONUS;
+ex.innerHTML = '✅ <b>正解！ 知識ボーナス +' + yen(QUIZ_BONUS) + '</b><br>' + q.exp;
+log('🧠 クイズ正解！ 知識ボーナス +' + yen(QUIZ_BONUS));
+} else {
+b.classList.add('wrong'); box.children[q.ans].classList.add('correct');
+ex.innerHTML = '❌ <b>ざんねん…でもここが学び時！</b><br>' + q.exp;
+log('🧠 クイズは不正解。でも解説でしっかり学習。');
+}
+ex.classList.remove('hidden'); $('quiz-next-row').classList.remove('hidden'); updateHUD();
+});
+box.appendChild(b);
+});
+show('screen-quiz'); window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ===== 詐欺イベント ===== */
+function scam(choice){
+$('btn-scam-yes').disabled = true; $('btn-scam-no').disabled = true;
+var res = $('scam-result');
+if(choice === 'yes'){
+var loss = totalAssets() * 0.15;
+ASSETS.forEach(function(a){ state.holdings[a.id] *= 0.85;});
+state.scamResult = 'victim';
+res.textContent = '😱 相手と連絡が取れなくなりました…。預けた ' + yen(loss) + ' は戻ってきませんでした。';
+log('🚨 投資詐欺の被害！ 総資産の15%（' + yen(loss) + '）を失った。');
+$('lesson-text'); // noop
+alert('学びポイント：「元本保証で月利10%」は詐欺の典型サイン。本当の投資に“必ず儲かる”はありません。知らない相手からの勧誘、SNSだけの知り合いからの投資話は、まず疑いましょう。');
+} else {
+state.scamResult = 'avoided';
+res.textContent = '😌 きっぱり断りました。その後、そのアカウントは凍結されたそうです。セーフ！';
+log('🛡️ 怪しい勧誘を断った。被害なし。');
+alert('学びポイント：正解！「必ず儲かる」「元本保証で高利回り」「今だけ内緒」は詐欺の3大サイン。断る勇気が資産を守ります。');
+}
+state.scamDone = true;
+$('scam-next-row').classList.remove('hidden'); updateHUD();
+}
+
+/* ===== 最終結果 ===== */
+function finalResult(){
+show('screen-final');
+var t = totalAssets();
+var invested = 1000000 + TITSUMI*(TOTAL_YEARS-1);
+var rank =
+t >= 2600000? '🏆 伝説の投資家':
+t >= 2100000? '🌟 投資マスター':
+t >= 1700000? '🌳 堅実な資産形成家':
+t >= 1400000? '🌱 コツコツ投資家':
+t >= invested? '🐢 元本キープの守り手': '🔰 修行中の投資家見習い';
+$('final-rank').textContent = rank;
+$('final-total').textContent = yen(t);
+var pct = ((t/invested - 1) * 100).toFixed(1);
+$('final-detail').textContent = '元手100万円 ＋ 積立 ' + yen(TITSUMI*(TOTAL_YEARS-1)) + '（合計 ' + yen(invested) + '）→ ' + yen(t) +
+'（' + (pct>=0?'+':'') + pct + '%）／ クイズ ' + state.quizAsked + '問中 ' + state.quizCorrect + '問正解';
+// スタイル診断
+var avg = { jp:0, us:0, bond:0, gold:0, crypto:0, cash:0};
+state.allocHistory.forEach(function(al){ ASSETS.forEach(function(a){ avg[a.id] += al[a.id]/state.allocHistory.length;});});
+var fb = [];
+var stockShare = avg.jp + avg.us;
+if(stockShare >= 70) fb.push('株式中心の積極運用でした。リターンを狙える反面、暴落年のダメージも大きくなりがちです。');
+if(stockShare <= 35) fb.push('かなり堅実な配分でした。暴落には強い一方、インフレや株高の年には増えにくさも感じたはず。');
+if(avg.crypto >= 20) fb.push('暗号資産の割合が高め（平均' + avg.crypto.toFixed(0) + '%）。刺激的ですが、資産全体がジェットコースターになりやすい配分です。');
+if(avg.crypto > 0 && avg.crypto < 20) fb.push('暗号資産は「スパイス程度」の割合でした。値動きの激しい資産との付き合い方として現実的なラインです。');
+if(avg.cash >= 35) fb.push('現金の割合が高めでした。安心感はありますが、インフレの年には実質目減りする点も学べましたね。');
+if(avg.bond + avg.gold >= 25) fb.push('債券・金をしっかり組み入れていました。株と違う動きをする資産を持つ「分散」が実践できています。');
+if(state.scamResult === 'avoided') fb.push('怪しい勧誘を断れました。これは運用成績以上に価値のあるスキルです。');
+if(state.scamResult === 'victim') fb.push('詐欺の被害は痛かったですね…。現実では取り返せません。「必ず儲かる話は疑う」を合言葉に。');
+if(state.quizCorrect === state.quizAsked && state.quizAsked > 0) fb.push('クイズ全問正解！ 知識は、暴落でも奪われない最強の資産です。');
+if(!fb.length) fb.push('バランスの取れた運用でした。');
+$('final-feedback').innerHTML = fb.map(function(x){ return '<li>' + x + '</li>';}).join('');
+$('final-lessons').innerHTML = state.lessonsSeen.map(function(x){ return '<li>' + x + '</li>';}).join('') ||
+'<li>（レッスンは結果画面で表示されます）</li>';
+$('hud-progress').style.width = '100%';
+log('🏁 10年間終了！ 最終資産 ' + yen(t) + '（' + rank + '）');
+window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ===== イベント登録 ===== */
+$('btn-start').addEventListener('click', startGame);
+$('btn-restart').addEventListener('click', function(){ $('btn-scam-yes').disabled=false; $('btn-scam-no').disabled=false; $('scam-result').textContent=''; $('scam-next-row').classList.add('hidden'); startGame();});
+$('btn-equal').addEventListener('click', function(){ setAlloc({jp:20,us:20,bond:20,gold:10,crypto:10,cash:20});});
+$('btn-safe').addEventListener('click', function(){ setAlloc({jp:15,us:15,bond:35,gold:10,crypto:0,cash:25});});
+$('btn-aggro').addEventListener('click', function(){ setAlloc({jp:25,us:35,bond:0,gold:5,crypto:25,cash:10});});
+$('btn-invest').addEventListener('click', invest);
+$('btn-next-year').addEventListener('click', nextYear);
+$('btn-quiz-next').addEventListener('click', function(){ startYear();});
+$('btn-scam-yes').addEventListener('click', function(){ scam('yes');});
+$('btn-scam-no').addEventListener('click', function(){ scam('no');});
+$('btn-scam-next').addEventListener('click', setupYear);
+state = newState(); updateHUD();
+</script>
+</body>
+</html>
