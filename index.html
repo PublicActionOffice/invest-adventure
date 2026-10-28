@@ -62,13 +62,15 @@ header p{margin:0;opacity:.92;font-size:.92rem}
 .log div{padding:5px 0;border-bottom:1px dotted #d5dbdb}
 footer{color:#5d6d7e;font-size:.8rem;text-align:center;padding:8px 16px 30px}
 .scam{border:2px solid #c0392b;background:#fdedec}
+.art{width:100%;height:auto;display:block;border-radius:12px;margin:0 0 14px}
+.art.small{max-width:520px;margin-left:auto;margin-right:auto}
 @media (max-width:560px){.asset-amt{display:none} header h1{font-size:1.3rem}}
 </style>
 </head>
 <body>
 <header>
 <h1>🗺️ インベスト・アドベンチャー</h1>
-<p>100万円から始める、10年間の資産形成ゲーム。遊びながら「分散・複利・リスク」を体で覚えよう。</p>
+<p>100万円から始める、10年間の資産形成アドベンチャー！ ニュースを読んで、キミの資産をどこに置くか決めるだけ。遊びながら「分散・複利・リスク」を体で覚えよう。</p>
 </header>
 
 <div class="wrap">
@@ -93,6 +95,7 @@ footer{color:#5d6d7e;font-size:.8rem;text-align:center;padding:8px 16px 30px}
 
 <!-- スタート画面 -->
 <div class="card" id="screen-start">
+<img class="art" src="hero.webp" alt="チャートの道を冒険する若者たちのイラスト">
 <h2>🎯 ルール（30秒で読める）</h2>
 <p>毎年、ニュースが1つ届きます。ヒントを読んで、あなたの資産を <b>6つの置き場所</b> に振り分けてください（合計100%）。その年の市場が動いて、資産が増えたり減ったりします。これを10年くり返します。</p>
 <p>📌 毎年、積立として <b>12万円</b> が自動で現金に入ります（コツコツ積立の体験）。<br>
@@ -104,6 +107,7 @@ footer{color:#5d6d7e;font-size:.8rem;text-align:center;padding:8px 16px 30px}
 
 <!-- 詐欺イベント -->
 <div class="card scam hidden" id="screen-scam">
+<img class="art small" src="scam.webp" alt="怪しいDMを受け取って戸惑う若者のイラスト">
 <h2>🚨 突然の勧誘！</h2>
 <p>SNSで知り合った人からDMが届きました。</p>
 <p style="font-size:1.05rem"><b>「月利10%・元本保証の特別な投資があります。今だけ、内緒ですよ」</b></p>
@@ -159,6 +163,7 @@ footer{color:#5d6d7e;font-size:.8rem;text-align:center;padding:8px 16px 30px}
 
 <!-- 最終結果 -->
 <div class="card hidden" id="screen-final">
+<img class="art" src="celebration.webp" alt="トロフィーを掲げて喜ぶ若者たちのイラスト">
 <h2>🏁 10年間、おつかれさまでした！</h2>
 <div class="rank" id="final-rank"></div>
 <div class="big-total" id="final-total"></div>
